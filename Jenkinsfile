@@ -66,7 +66,8 @@ pipeline {
             }
             steps {
                 sh '''
-                    ls -la
+                    echo "Test Stage"
+                    grep build
                     node --version
                     npm --version
                     npm test
