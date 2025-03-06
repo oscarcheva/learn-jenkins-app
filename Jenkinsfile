@@ -29,6 +29,8 @@ pipeline {
                 npm --version
                 ls -la
                 touch container-yes.txt
+                echo "Hello Docker file >> container-yes.txt"
+                cat container-yes.txt
                 '''
             }
         }
