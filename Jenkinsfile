@@ -13,17 +13,14 @@ pipeline {
             }
         }
         
-        stage('With Docker'){
-        
-            agent{
-                
-                docker{
+        stage('With Docker') {
+            agent {
+                docker {
                     image 'node:18-alpine'
                     reuseNode true
                 }
             }
             steps {
-                
                 sh '''
                 echo "Hello World with Docker"
                 npm --version
@@ -35,71 +32,67 @@ pipeline {
             }
         }
 
-        stage('Build'){
-        
-            agent{
-                
-                docker{
+        stage('Build') {
+            agent {
+                docker {
                     image 'node:18-alpine'
                     reuseNode true
                 }
             }
             steps {
                 sh '''
-                    ls -la
-                    node --version
-                    npm --version
-                    npm ci
-                    npm run build
-                    ls -la
+                ls -la
+                node --version
+                npm --version
+                npm ci
+                npm run build
+                ls -la
                 '''
             }
         }
-        stage('Test'){
-        
-            agent{
-                
-                docker{
-                    image 'node:18-alpine'
-                    reuseNode true
+        stage('Run Tests') {
+            parallel { 
+                stage('Test') {
+                    agent {
+                        docker {
+                            image 'node:18-alpine'
+                            reuseNode true
+                        }
+                    }
+                    steps {
+                        sh '''
+                        echo "Test Stage"
+                        test -f build/index.html
+                        node --version
+                        npm --version
+                        npm test
+                        '''
+                    }
+                }
+                stage('E2E') {
+                    agent {
+                        docker {
+                            image 'mcr.microsoft.com/playwright:v1.51.0-noble'
+                            reuseNode true
+                            //args '-u root:root'
+                        }
+                    }
+                    steps {
+                        sh '''
+                        npm install serve
+                        node_modules/.bin/serve -s build &
+                        sleep 10
+                        npx playwright test --reporter=html
+                        '''
+                    }
                 }
             }
-            steps {
-                sh '''
-                    echo "Test Stage"
-                    test -f build/index.html
-                    node --version
-                    npm --version
-                    npm test
-                '''
-            }
         }
-
-        stage('E2E'){
-        
-            agent{
-                
-                docker{
-                    image 'mcr.microsoft.com/playwright:v1.51.0-noble'
-                    reuseNode true
-                    //args '-u root:root'
-                }
-            }
-            steps {
-                sh '''
-                    npm install serve
-                    node_modules/.bin/serve -s build &
-                    sleep 10
-                    npx playwright test
-                '''
-            }
-        }
-    }
 
     post {
-        always{
+        always {
             junit 'jest-results/junit.xml'
         }
     }
 }
-
+}
