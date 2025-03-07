@@ -88,6 +88,30 @@ pipeline {
                 }
             }
         } */
+
+        stage('Test') {
+                    agent {
+                        docker {
+                            image 'node:18-alpine'
+                            reuseNode true
+                        }
+                    }
+                    steps {
+                        sh '''
+                        echo "Test Stage"
+                        test -f build/index.html
+                        node --version
+                        npm --version
+                        npm test
+                        '''
+                    }
+                    post {
+                        always {
+                            junit 'jest-results/junit.xml'
+                        }
+    }
+                }
+
         stage('Deploy') {
             agent {
                 docker {
@@ -97,16 +121,10 @@ pipeline {
             }
             steps {
                 sh '''
-                npm install netlify-cli -g
-                netlifym,km, km,k 
+                npm install netlify-cli
+                netlify --version
                 '''
             }
-        }
-    }
-
-    post {
-        always {
-            junit 'jest-results/junit.xml'
         }
     }
 
